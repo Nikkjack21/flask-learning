@@ -37,6 +37,10 @@ class User(db.Model, UserMixin):
     )
     payments = db.relationship("Payments", backref="user_payment", lazy=True)
 
+    orders = db.relationship(
+        "Orders", cascade="all, delete, delete-orphan", backref="user_orders", lazy=True
+    )
+
     @property
     def password_hash(self):
         return self.password_hash
@@ -63,7 +67,7 @@ class Address(db.Model):
     city = db.Column(db.String(length=20), nullable=False)
     state = db.Column(db.String(length=20), nullable=False)
     phone = db.Column(db.Integer(), nullable=False)
-    orders = db.relationship("'Order", backref="order_address")
+    orders = db.relationship("Orders", backref="order_address", lazy=True)
 
     def __repr__(self):
         return self.user.username
@@ -113,7 +117,7 @@ class Payments(db.Model):
     amount_paid = db.Column(db.Integer())
     status = db.Column(db.Boolean())
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    payment = db.relationship("Order", backref="order_payments")
+    payment = db.relationship("Orders", backref="order_payments")
 
     def __repr__(self):
         return self.user.username

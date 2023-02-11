@@ -1,15 +1,27 @@
 from account import app, db
 from flask import render_template, request, redirect, url_for, jsonify
 from account.Forms import LoginForm, RegisterForm, AdminLoginForm, CategoryForm
-from .models import User, Category, Product
+from .models import (
+    User,
+    Category,
+    Product,
+    Cart,
+    Orders,
+    OrderProducts,
+    Address,
+    Payments,
+)
 from flask_login import login_user, current_user, logout_user, login_required
 
 
+# User side
 
-#User side
 
 @app.route("/")
 def index():
+    user = current_user
+    if current_user:
+        print(user.id)
     return render_template("index.html", current_user=current_user)
 
 
@@ -57,8 +69,6 @@ def logout():
     return redirect(url_for("index"))
 
 
-
-
 # Admin-Side
 
 
@@ -98,6 +108,7 @@ def admin_logout():
 
 @app.route("/admin/all-category", methods=["GET"])
 def all_category():
+    print("Current-User", current_user)
     category = Category.query.all()
     return render_template("admin/all-category.html", category=category)
 
@@ -195,3 +206,31 @@ def edit_product(id):
         db.session.commit()
         return "Product added"
     return render_template("base.html", product=product)
+
+
+@app.route("/add-to-cart/<int:id>")
+def add_to_cart(id):
+    user = current_user
+    product = Product.query.get(id)
+
+    try:
+        cart = Cart.query.filter_by(user=user.id, products=product.id).first()
+        cart.products = product.id
+        cart.quantity += 1
+        db.session.commit()
+        return "Product Added again"
+
+    except Exception as e:
+        print('Errorrrr--->', e)
+        cart = Cart(user=user.id, products=product.id, quantity=1)
+        db.session.add(cart)
+        db.session.commit()
+        return "Cart Created"
+    
+@app.route('/remove-qnty/<int:id>')
+def remove_auantity(id):
+    user = current_user
+    product = Product.query.get(id)
+    
+
+    pass
