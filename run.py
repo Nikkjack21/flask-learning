@@ -1,3 +1,5 @@
+import datetime
+import uuid
 from account import app, db, bcrypt
 from account.models import User
 
@@ -18,6 +20,11 @@ def createsuperuser():
         db.session.add(user)
         db.session.commit()
     print("Super User has been successfully created.")
+
+
+
+
+
 
 
 # if __name__ == '__main__':

@@ -5,14 +5,12 @@ from .models import User, Category, Product
 from flask_login import login_user, current_user, logout_user, login_required
 
 
+
+#User side
+
 @app.route("/")
 def index():
     return render_template("index.html", current_user=current_user)
-
-
-@app.route("/no")
-def noo():
-    return "<h1> No wayyyy </h1>"
 
 
 @app.route("/login", methods=["POST", "GET"])
@@ -59,6 +57,8 @@ def logout():
     return redirect(url_for("index"))
 
 
+
+
 # Admin-Side
 
 
@@ -93,14 +93,16 @@ def admin_logout():
         return redirect(url_for("admin_login"))
 
 
-#Adnin-Category
+# Adnin-Category
 
-@app.route('/admin/all-category', methods=['GET'])
+
+@app.route("/admin/all-category", methods=["GET"])
 def all_category():
-    category =  Category.query.all()
-    return render_template('admin/all-category.html', category=category)
+    category = Category.query.all()
+    return render_template("admin/all-category.html", category=category)
 
-@app.route('/add-category', methods=["POST"])
+
+@app.route("/add-category", methods=["POST"])
 def add_category():
     form = CategoryForm()
     if form.validate_on_submit():
@@ -110,16 +112,17 @@ def add_category():
         return "Category Added"
     return "Add a category"
 
-@app.route('/admin/category/<int:id>')
+
+@app.route("/admin/category/<int:id>")
 def show_category(id):
-    cat =  Category.query.get(id)
-    return f'<h1> Catgegory -> {cat}'
+    cat = Category.query.get(id)
+    return f"<h1> Catgegory -> {cat}"
 
 
-@app.route('/admin/category/<int:id>/edit', methods=["POST", "GET"])
+@app.route("/admin/category/<int:id>/edit", methods=["POST", "GET"])
 def edit_category(id):
-    category =  Category.query.get(id)
-    form =  CategoryForm()
+    category = Category.query.get(id)
+    form = CategoryForm()
     if request.method == "GET":
         form.category_name.data = category.category_name
     else:
@@ -128,12 +131,13 @@ def edit_category(id):
             form.populate_obj(category)
             category.category_name = form.category_name.data
             db.session.commit()
-            return redirect(url_for('all_category'))
-    return render_template('admin/edit-category.html', form=form)
+            return redirect(url_for("all_category"))
+    return render_template("admin/edit-category.html", form=form)
 
-@app.route('/admin/category/delete/<int:id>')
+
+@app.route("/admin/category/delete/<int:id>")
 def delete_Category(id):
-    category =  Category.query.get(id)
+    category = Category.query.get(id)
     if category:
         db.session.delete(category)
         db.session.commit()
@@ -141,20 +145,20 @@ def delete_Category(id):
     return "<h1> Category not found</h1>"
 
 
-
-#Admin-Products
-@app.route('/show-products', methods=["GET"])
+# Admin-Products
+@app.route("/show-products", methods=["GET"])
 def products():
     product = Product.query.all()
-    return f'products->{product}'
+    return f"products->{product}"
 
 
-@app.route('/show-cat-prod/<int:id>', methods=["GET"])
+@app.route("/show-cat-prod/<int:id>", methods=["GET"])
 def prod_by_cat(id):
-    products = Product.query.filter_by(category=id).all()   
-    return f'prod_by_cat----> {products}'
+    products = Product.query.filter_by(category=id).all()
+    return f"prod_by_cat----> {products}"
 
-@app.route('/del-product/<int:id>', methods=['DELETE'])
+
+@app.route("/del-product/<int:id>", methods=["DELETE"])
 def delete_product(id):
     product = Product.query.get(id)
     if product:
@@ -163,25 +167,27 @@ def delete_product(id):
         return "<h1> Product deleted </h1>"
 
 
-@app.route('/add-product', methods=["POST"])
+@app.route("/add-product", methods=["POST"])
 def add_product():
-    category =  Category.query.all()
-    product_name =  request.form.get("product_name")
+    category = Category.query.all()
+    product_name = request.form.get("product_name")
     price = request.form.get("price")
     stock = request.form.get("stock")
-    category_id =  request.form.get("category")
+    category_id = request.form.get("category")
 
-    product = Product(product_name=product_name, price=price, stock=stock, category=category_id)
+    product = Product(
+        product_name=product_name, price=price, stock=stock, category=category_id
+    )
     db.session.add(product)
     db.session.commit()
-    return "<h1> Product added </h1>"
+    return render_template("base.html", category=category)
 
 
-@app.route('/edit-product/<int:id>', methods=["PATCH"])
+@app.route("/edit-product/<int:id>", methods=["PATCH"])
 def edit_product(id):
     product = Product.query.get(id)
     if product:
-        product_name =  request.form.get("product_name")
+        product_name = request.form.get("product_name")
         price = request.form.get("price")
         stock = request.form.get("stock")
         product = Product(product_name=product_name, price=price, stock=stock)
@@ -189,9 +195,3 @@ def edit_product(id):
         db.session.commit()
         return "Product added"
     return render_template("base.html", product=product)
-
-
-
-
-
-
