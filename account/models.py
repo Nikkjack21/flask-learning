@@ -117,7 +117,7 @@ class Payments(db.Model):
     amount_paid = db.Column(db.Integer())
     status = db.Column(db.Boolean())
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
-    payment = db.relationship("Orders", backref="order_payments")
+    order = db.relationship("Orders", backref="order_payments")
 
     def __repr__(self):
         return self.user.username
@@ -130,7 +130,7 @@ class Orders(db.Model):
         db.ForeignKey("user.id"),
         nullable=False,
     )
-    Payments = db.Column(db.Integer(), db.ForeignKey("payments.id"), nullable=False)
+    Payments = db.Column(db.Integer(), db.ForeignKey("payments.id"), )
     shipping_address = db.Column(
         db.Integer(), db.ForeignKey("address.id"), nullable=False
     )

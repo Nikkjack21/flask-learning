@@ -69,6 +69,139 @@ def logout():
     return redirect(url_for("index"))
 
 
+@app.route("/add-address")
+def add_address():
+    if current_user.is_authenticated:
+        user = current_user.id
+        name = request.form.get("name")
+        address = request.form.get("address")
+        pincode = request.form.get("pincode")
+        city = request.form.get("city")
+        state = request.form.get("state")
+        phone = request.form.get("phone")
+
+        add_user_address = Address(
+            user=user,
+            name=name,
+            address=address,
+            pincode=pincode,
+            city=city,
+            state=state,
+            phone=phone,
+        )
+        db.session.add(add_user_address)
+        db.session.commit()
+    return "User address added"
+
+
+@app.route("/show-address")
+def show_address():
+    user = current_user
+    address = Address.query.filter_by(user=user.id)
+    return "Shows addrress"
+
+
+@app.route("/add-to-cart/<int:id>")
+def add_to_cart(id):
+    user = current_user
+    product = Product.query.get(id)
+
+    try:
+        cart = Cart.query.filter_by(user=user.id, products=product.id).first()
+        cart.products = product.id
+        cart.quantity += 1
+        db.session.commit()
+        return "Product Added again"
+
+    except Exception as e:
+        print("Errorrrr--->", e)
+        cart = Cart(user=user.id, products=product.id, quantity=1)
+        db.session.add(cart)
+        db.session.commit()
+        return "Cart Created"
+
+
+@app.route("/remove-qnty/<int:id>")
+def remove_quantity(id):
+    user = current_user
+    product = Product.query.get(id)
+    if current_user.is_authenticated:
+        cart = Cart.query.filter_by(user=user.id, products=product.id).first()
+        if cart.quantity > 1:
+            cart.quantity -= 1
+            db.session.commit()
+            return jsonify(
+                user=cart.user_cart.username,
+                product=cart.products,
+                quantity=cart.quantity,
+            )
+
+    return "<h1>Quantity remove page</h1>"
+
+
+@app.route("/remove-cart_item/<int:id>")
+def remove_cart(id):
+    user = current_user
+    product = Product.query.get(id)
+    if current_user.is_authenticated:
+        cart = Cart.query.filter_by(user=user.id, products=product.id).first()
+        db.session.delete(cart)
+        db.session.commit()
+        return "Cart Item Deleted"
+    return "Cart ITem delete page"
+
+
+@app.route("/cart")
+def cart():
+    total = 0
+    quantity = 0
+    user = current_user
+    cart = Cart.query.filter_by(user=user.id).first()
+    for items in cart:
+        quantity += items.quantity
+        total += items.cart_products.price * items.quantity
+
+    context = {
+        "total": total,
+        "quantity": quantity,
+    }
+
+    return render_template("base.html", context=context)
+
+
+@app.route("/place-order")
+def place_order():
+    total = 0
+    quantity = 0
+    user = current_user
+    if user.is_authenticated:
+        cart = Cart.query.filter_by(user=user.id).first()
+        for items in cart:
+            quantity += items.quantity
+            total += items.cart_products.price * items.quantity
+        address = request.form.get("address_id")
+        order_item = Orders(user=user.id, order_total=total, shipping_address=address)
+    return render_template("base.html", order=order_item)
+
+
+@app.route("/cod")
+def cash_on_delivery():
+    user = current_user
+
+    if user.is_authenticated:
+        order_number = request.args.get("order_number")
+        orders = Orders.query.filter_by(order_number=order_number).first()
+        payments = Payments(
+            user=user.id,
+            amount_paid=orders.order_payments.order_total,
+            status="Pending",
+        )
+        db.session.add(payments)
+        db.session.commit()
+        return "Cash on delivery successfull"
+    return render_template("base.jtml")
+
+
 # Admin-Side
 
 
@@ -206,31 +339,3 @@ def edit_product(id):
         db.session.commit()
         return "Product added"
     return render_template("base.html", product=product)
-
-
-@app.route("/add-to-cart/<int:id>")
-def add_to_cart(id):
-    user = current_user
-    product = Product.query.get(id)
-
-    try:
-        cart = Cart.query.filter_by(user=user.id, products=product.id).first()
-        cart.products = product.id
-        cart.quantity += 1
-        db.session.commit()
-        return "Product Added again"
-
-    except Exception as e:
-        print('Errorrrr--->', e)
-        cart = Cart(user=user.id, products=product.id, quantity=1)
-        db.session.add(cart)
-        db.session.commit()
-        return "Cart Created"
-    
-@app.route('/remove-qnty/<int:id>')
-def remove_auantity(id):
-    user = current_user
-    product = Product.query.get(id)
-    
-
-    pass
